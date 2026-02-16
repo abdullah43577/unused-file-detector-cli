@@ -1,168 +1,150 @@
-````markdown
-# @reactmode/unused-check
+# 🔍 Unused File Detector
 
-Detect unused JavaScript and TypeScript files in your React / Next.js projects.
+A powerful CLI tool to detect unused exported files in your TypeScript/JavaScript projects. Keep your codebase clean by identifying files that are exported but never imported anywhere.
 
-This CLI scans your project, resolves local imports (including `tsconfig` path aliases), and reports files that are never referenced anywhere in your codebase.
+## ✨ Features
 
----
+- 🎯 Detects files with exports that are never imported
+- 📊 Beautiful terminal UI with progress indicators
+- 📋 Clean table output showing all unused files
+- 🚀 Fast and efficient scanning
+- 💡 Smart detection of `index.ts/tsx` files
+- 🎨 Color-coded results for better readability
 
-## 🚀 Installation
+## 📦 Installation
 
-### Run with npx (recommended)
+### Global Installation (Recommended)
 
 ```bash
-npx @reactmode/unused-file-detector
+npm install -g unused-file-detector
 ```
-````
 
-### Install globally
+### Local Installation
 
 ```bash
-npm i @reactmode/unused-file-detector
+npm install unused-file-detector --save-dev
+```
+
+## 🚀 Usage
+
+### Global Installation
+
+Simply run the command in your project root:
+
+```bash
+unused-files
+```
+
+### Local Installation
+
+Add to your `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "check-unused": "unused-files"
+  }
+}
 ```
 
 Then run:
 
 ```bash
-unused-check
+npm run check-unused
 ```
 
----
+## 📖 How It Works
 
-## 🎯 What It Does
+1. **Scans** all TypeScript/JavaScript files in your `src` directory
+2. **Identifies** files that contain export statements
+3. **Checks** if these exported files are imported anywhere in the codebase
+4. **Reports** files that are exported but never used
 
-- Recursively scans `.ts`, `.tsx`, `.js`, `.jsx` files
-- Resolves:
-  - Relative imports (`./component`)
-  - Index files (`./folder/index.ts`)
-  - `export ... from`
-  - `require()`
-  - `tsconfig.json` path aliases
+### Supported File Types
 
-- Ignores:
-  - `node_modules`
-  - `dist`
-  - `public`
+- `.ts` - TypeScript
+- `.tsx` - TypeScript React
+- `.js` - JavaScript
+- `.jsx` - JavaScript React
+- `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg` - Image files
 
-- Detects files that are never imported anywhere
-- Reports unused files clearly in the terminal
-
----
-
-## 📁 Supported Projects
-
-- React
-- Next.js (pages router & app router)
-- TypeScript projects
-- JavaScript projects
-
----
-
-## 🧠 How It Works
-
-1. Collects all source files in the project.
-2. Reads each file and extracts import statements.
-3. Resolves imports to actual file paths.
-4. Builds a dependency map.
-5. Flags files that are never referenced.
-
----
-
-## 🛠 Example Output
-
-### ✅ No Unused Files
+## 📋 Example Output
 
 ```
-Scanning 84 files...
+🔍 Unused File Detector
 
-✔ No unused files found.
+✔ Found 178 files to analyze
+✔ Found 160 files with exports
+✔ Analysis complete!
+
+📋 Results:
+
+⚠️  Found 3 unused file(s):
+
+┌───┬──────────────────────────────────────────┬───────────────┬────────┐
+│ # │ File Path                                │ Component     │ Type   │
+├───┼──────────────────────────────────────────┼───────────────┼────────┤
+│ 1 │ src/components/OldButton/index.tsx       │ OldButton     │ .tsx   │
+│ 2 │ src/utils/deprecatedHelper.ts            │ deprecated... │ .ts    │
+│ 3 │ src/hooks/useOldFetch.ts                 │ useOldFetch   │ .ts    │
+└───┴──────────────────────────────────────────┴───────────────┴────────┘
+
+📈 Summary:
+
+┌─────────────────────┬───────┐
+│ Total Files Scanned │   178 │
+│ Files with Exports  │   160 │
+│ Files in Use        │   157 │
+│ Unused Files        │     3 │
+└─────────────────────┴───────┘
+
+💡 Tip: Review these files before deleting to ensure they're truly unused.
 ```
 
-### 🚨 Unused Files Found
+## 🎯 Use Cases
 
-```
-Scanning 84 files...
+- **Code Cleanup**: Remove dead code from your project
+- **Refactoring**: Identify components that can be safely deleted
+- **Code Reviews**: Ensure new code doesn't introduce unused files
+- **CI/CD**: Add to your pipeline to prevent unused code from being merged
 
-🚨 Unused files detected:
+## ⚙️ Configuration
 
-src/components/OldCard.tsx
-src/utils/tempHelper.ts
-src/hooks/useLegacyHook.ts
-```
+Currently, the tool scans the `src` directory by default and ignores:
 
----
+- `node_modules/`
+- `dist/`
 
-## 📦 Entry File Protection
+## 🤝 Contributing
 
-Some files may not be imported directly but are still required by your framework. Common entry files are automatically protected, including:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- `pages/index.tsx`
-- `app/layout.tsx`
-- `app/page.tsx`
-- `main.tsx`
-- `index.tsx`
-- `next.config.js`
+## 📝 License
 
----
+MIT
 
-## ⚠️ Limitations (Current Version)
+## 🐛 Known Limitations
 
-- Does not yet parse AST (uses regex for import detection)
-- Dynamic imports may not always be detected
-- Assets referenced only in CSS or HTML may not be detected
-- Files required at runtime outside static imports may be flagged
+- Only detects direct imports (not dynamic imports with variables)
+- Does not analyze import statements that use path aliases (coming soon)
+- Entry point files (like `src/App.tsx`, `src/index.ts`) are included in the scan
 
-Future versions may introduce deeper static analysis.
+## 💡 Tips
 
----
+- Run this tool regularly during development to keep your codebase clean
+- Always review the results before deleting files
+- Some files might be used by external tools or testing frameworks
+- Consider adding this to your pre-commit hooks
 
-## 🔄 Exit Behavior
+## 🔮 Future Enhancements
 
-Currently:
-
-- Prints unused files to the console
-- Does not automatically delete files
-- Designed to be safe by default
+- [ ] Support for path aliases (`@/components`)
+- [ ] Configuration file support
+- [ ] Exclude patterns
+- [ ] Export to JSON/CSV
+- [ ] Integration with popular bundlers
+- [ ] Detection of unused exports within files
 
 ---
 
-## 💡 Why Use This?
-
-In fast-moving frontend projects:
-
-- Dead components accumulate
-- Refactored files stay in the repo
-- Bundle size increases silently
-- Project structure becomes noisy
-
-`unused-check` helps you:
-
-- Clean your codebase
-- Reduce technical debt
-- Keep your project lean
-- Improve maintainability
-
----
-
-## 🛣 Roadmap
-
-Planned improvements:
-
-- `--json` output mode
-- `--exclude` flag
-- `--fix` (optional auto-delete)
-- AST-based import parsing
-- Image and asset usage detection
-- Performance optimizations with concurrency
-
----
-
-## 👤 Author
-
-Built by ReactMode.
-
-```
-
-If you'd like, I can also help you write a sharper, more marketable version that positions this as part of a growing frontend quality toolkit instead of just a standalone utility.
-```
+Made with ❤️ by [Your Name]
