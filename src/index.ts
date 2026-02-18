@@ -7,6 +7,7 @@ import chalk from "chalk";
 import ora from "ora";
 import { Table } from "console-table-printer";
 import { checkFileIsImportedHere, getFileNameToSearch, hasExports } from "./helper.js";
+import { performance } from "perf_hooks";
 
 const detectUnusedFilesInDirectory = async function (directory: string) {
   try {
@@ -24,12 +25,30 @@ const detectUnusedFilesInDirectory = async function (directory: string) {
     const exportSpinner = ora("Detecting files with exports...").start();
     const filesWithExports: string[] = [];
 
-    allFiles.forEach(file => {
-      const content = fs.readFileSync(file, "utf-8");
-      if (hasExports(content)) {
-        filesWithExports.push(file);
-      }
-    });
+    const batchSize = 10;
+    for (let i = 0; i < allFiles.length; i += batchSize) {
+      const batch = allFiles.slice(i, i + batchSize);
+
+      const batchPromises = batch.map(async file => {
+        try {
+          const content = await fs.promises.readFile(file, "utf-8");
+          if (hasExports(content)) {
+            return file;
+          }
+        } catch (error) {
+          return null;
+        }
+
+        return null;
+      });
+      const results = await Promise.all(batchPromises);
+      results.forEach(file => {
+        if (file) filesWithExports.push(file);
+      });
+
+      // Update spinner text with progress
+      exportSpinner.text = `Detecting files with exports... (${Math.min(i + batchSize, allFiles.length)}/${allFiles.length})`;
+    }
 
     exportSpinner.succeed(chalk.green(`Found ${filesWithExports.length} files with exports`));
 
@@ -44,8 +63,12 @@ const detectUnusedFilesInDirectory = async function (directory: string) {
       spinner: "dots",
     }).start();
 
+    const start = performance.now();
+    console.log(chalk.gray(`This may take a moment for larger projects...`));
+
     let processed = 0;
-    filesWithExports.forEach(file => {
+
+    for (const file of filesWithExports) {
       processed++;
       const percentage = Math.round((processed / filesWithExports.length) * 100);
       progressSpinner.text = `Processing ${processed}/${filesWithExports.length} (${percentage}%): ${chalk.gray(path.basename(file))}`;
@@ -54,10 +77,11 @@ const detectUnusedFilesInDirectory = async function (directory: string) {
       const fileNameToSearch = getFileNameToSearch(file);
 
       // Check if THIS file is imported in ANY other file
-      filesWithExports
-        .filter(f => f !== file)
-        .forEach(otherFile => {
-          const otherContent = fs.readFileSync(otherFile, "utf-8");
+      const otherFiles = filesWithExports.filter(f => f !== file);
+
+      for (const otherFile of otherFiles) {
+        try {
+          const otherContent = await fs.promises.readFile(otherFile, "utf-8");
 
           const hasImport = checkFileIsImportedHere({
             content: otherContent,
@@ -66,17 +90,28 @@ const detectUnusedFilesInDirectory = async function (directory: string) {
 
           if (hasImport) {
             isImportedAnywhere = true;
+            break; // No need to check remaining files
           }
-        });
+        } catch (error) {
+          // Handle file read errors gracefully
+          continue;
+        }
+      }
+
+      // Yield control to allow spinner animation
+      await new Promise(resolve => setImmediate(resolve));
 
       if (isImportedAnywhere) {
         processedFiles.push(file);
       } else {
         unusedFiles.push(file);
       }
-    });
+    }
 
     progressSpinner.succeed(chalk.green(`Analysis complete!`));
+    const end = performance.now();
+    const duration = ((end - start) / 1000).toFixed(2);
+    console.log(chalk.gray(`⏱️  Time taken: ${duration} seconds\n`));
 
     // Step 4: Display results
     console.log(chalk.bold.cyan("\n📋 Results:\n"));
