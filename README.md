@@ -32,7 +32,7 @@ npm install unused-file-detector --save-dev
 Simply run the command in your project root:
 
 ```bash
-unused-files
+unused-check
 ```
 
 ### Local Installation
@@ -42,7 +42,7 @@ Add to your `package.json` scripts:
 ```json
 {
   "scripts": {
-    "check-unused": "unused-files"
+    "check-unused": "unused-check"
   }
 }
 ```
