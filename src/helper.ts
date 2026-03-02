@@ -11,6 +11,7 @@ export const regexImport = [
   /import\s+.*?['"](.+?)['"]/g, // import ... from '...'
   /require\(['"](.+?)['"]\)/g, // require('...')
   /import\(['"](.+?)['"]\)/g, // dynamic import('...')
+  /import\s+['"](.+?)['"]/g, // import '...'
 ];
 
 // Check if file has any exports
@@ -18,21 +19,46 @@ export const hasExports = (content: string): boolean => {
   return regexExport.some(pattern => pattern.test(content));
 };
 
+// // Check if file is imported in the content of another file
+// export const checkFileIsImportedHere = ({ content, filePath }: { content: string; filePath: string }): boolean => {
+//   return regexImport.some(pattern => {
+//     let match;
+//     while ((match = pattern.exec(content)) !== null) {
+//       const importedFile = match[1] as string;
+//       if (importedFile.includes(filePath)) {
+//         return true;
+//       }
+//     }
+//     return false;
+//   });
+// };
+
 // Check if file is imported in the content of another file
 export const checkFileIsImportedHere = ({ content, filePath }: { content: string; filePath: string }): boolean => {
   return regexImport.some(pattern => {
+    // Reset the regex lastIndex to ensure consistent behavior
+    pattern.lastIndex = 0;
     let match;
     while ((match = pattern.exec(content)) !== null) {
       const importedFile = match[1] as string;
+
+      // For exact module matching (like npm packages)
+      if (importedFile === filePath) {
+        return true;
+      }
+
+      // For relative file imports (existing logic)
       if (importedFile.includes(filePath)) {
         return true;
       }
     }
+    // Reset regex state after while loop
+    pattern.lastIndex = 0;
     return false;
   });
 };
 
-// Add this function to get the correct name to search for
+// function to get the correct name to search for
 export const getFileNameToSearch = (filePath: string): string => {
   const fileName = path.basename(filePath, path.extname(filePath)); // e.g., "index" or "Button"
 

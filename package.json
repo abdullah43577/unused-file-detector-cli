@@ -20,11 +20,17 @@
     "file",
     "detector",
     "tool",
-    "cli"
+    "cli",
+    "modules",
+    "import",
+    "export",
+    "typescript",
+    "javascript"
   ],
   "author": "Abdullah Ayoola",
   "license": "ISC",
   "dependencies": {
+    "@inquirer/prompts": "^8.3.0",
     "console-table-printer": "^2.15.0",
     "glob": "^13.0.3",
     "ora": "^9.3.0",
